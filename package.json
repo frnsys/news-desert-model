@@ -1,0 +1,22 @@
+{
+  "name": "news-desert-model",
+  "version": "0.0.0",
+  "scripts": {
+    "start": "webpack-dev-server --watch --progress --mode=development",
+    "build": "NODE_ENV=production webpack --progress --colors -p"
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.0.0",
+    "konva": "^4.2.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.39",
+    "@babel/plugin-proposal-class-properties": "^7.0.0-beta.42",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.42",
+    "@babel/preset-env": "^7.0.0-beta.39",
+    "babel-loader": "^8.0.0-beta.0",
+    "webpack": "^4.21.0",
+    "webpack-cli": "^3.3.4",
+    "webpack-dev-server": "^3.1.14"
+  }
+}
