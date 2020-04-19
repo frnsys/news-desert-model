@@ -1,6 +1,6 @@
 import K from 'konva';
-import HexGrid from './grid';
-import HexGridUI from './ui/grid';
+import Sim from './sim';
+import SimUI from './ui/sim';
 
 const stageEl = document.getElementById('stage');
 const stageWidth = stageEl.clientWidth;
@@ -11,16 +11,21 @@ const stage = new K.Stage({
   height: stageHeight
 });
 
-const grid = new HexGrid(40, 40);
-const gridUI = new HexGridUI(stage, grid, 30);
-gridUI.draw();
-gridUI.blink([0, 0], 'yellow');
+const sim = new Sim(40, 40)
+const ui = new SimUI(sim, stage);
 
-window.addEventListener('resize', () => {
-  let containerWidth = stageEl.offsetWidth;
-  let scale = containerWidth / stageWidth;
-  stage.width(stageWidth * scale);
-  stage.height(stageHeight * scale);
-  stage.scale({x: scale, y: scale});
-  stage.draw();
-});
+function step() {
+  sim.step();
+  ui.showEvents();
+}
+
+setInterval(() => step(), 1000);
+
+// window.addEventListener('resize', () => {
+//   let containerWidth = stageEl.offsetWidth;
+//   let scale = containerWidth / stageWidth;
+//   stage.width(stageWidth * scale);
+//   stage.height(stageHeight * scale);
+//   stage.scale({x: scale, y: scale});
+//   stage.draw();
+// });

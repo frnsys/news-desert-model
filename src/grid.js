@@ -20,18 +20,16 @@ class HexGrid {
   constructor(nRows, nCols) {
     this.nRows = nRows;
     this.nCols = nCols;
-    this.cells = [];
+    this.cells = this.rows.flatMap((r) => this.cols.map((c) => ({
+      pos: [r,c]
+    })));
   }
 
   posToIdx([r, c]) {
     return r * this.nCols + c;
   }
 
-  setCell(pos, val) {
-    this.cells[this.posToIdx(pos)] = val;
-  }
-
-  getCell(pos) {
+  cell(pos) {
     return this.cells[this.posToIdx(pos)];
   }
 
