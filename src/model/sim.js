@@ -14,7 +14,9 @@ class Sim {
       revenuePerSub: 10,
       platformGrowth: 1.01,
       ownerRevenueShare: 0.1,
-      valuationMultiplier: 2
+      valuationMultiplier: 2,
+      ownershipLimit: 0.1,
+      economy: 1
     };
     this.stats = {
       revenue_s: 0,
@@ -110,7 +112,7 @@ class Sim {
 
     // Advertisers buy ads
     this.grid.cells.forEach((cell) => {
-      let ads = this.params.revenuePerAd * cell.wealth * cell.agents;
+      let ads = this.params.revenuePerAd * cell.wealth * cell.agents * this.params.economy;
       let covered = cell.publishers.filter((pub) => pub.covered.includes(cell));
       let z = covered.length + this.platforms.data;
       covered.forEach((pub) => {
@@ -118,7 +120,7 @@ class Sim {
         this.stats.revenue_a += adRevenue;
 
         // Subscribers
-        let subscriberRevenue = (cell.agents * cell.wealth)/covered.length * this.params.revenuePerSub;
+        let subscriberRevenue = (cell.agents * cell.wealth)/covered.length * this.params.revenuePerSub * this.params.economy;
         this.stats.revenue_s += subscriberRevenue;
 
         let revenue = adRevenue + subscriberRevenue;
@@ -144,11 +146,13 @@ class Sim {
 
     // Consolidation
     let profitOwners = this.owners.filter((own) => own.weights.profit > own.weights.civic);
+    let buyable = this.publishers.filter((pub) => !pub.bankrupt);
     profitOwners.forEach((own) => {
-      this.publishers.forEach((pub) => {
+      if (own.publishers.length/buyable >= this.params.ownershipLimit) return;
+      buyable.forEach((pub) => {
         if (pub.owner == own) return;
 
-        let cost = Math.max(0, pub.funds) * this.params.valuationMultiplier;
+        let cost = Math.max(0, pub.funds) * this.params.valuationMultiplier * this.params.economy;
         if (cost < own.funds) {
           own.buy(pub, cost);
         }
@@ -159,8 +163,9 @@ class Sim {
     this.stats.coverage /= this.grid.cells.length;
     this.stats.attention /= this.grid.cells.length;
     this.stats.concen = this.owners.reduce((acc, own) => {
+      own.publishers = own.publishers.filter((pub) => !pub.bankrupt);
       return own.publishers.length > acc ? own.publishers.length : acc
-    }, 0)/this.publishers.length;
+    }, 0)/buyable.length;
     return this.stats;
   }
 }
