@@ -13,9 +13,17 @@ const colormap4 = interpolate(['#c4fcd7', '#25ba56']);
 const colormap5 = interpolate(['red', 'yellow']);
 
 class SimUI {
-  constructor(sim, stage) {
+  constructor(sim, stageId) {
     this.sim = sim;
-    this.stage = stage;
+
+    const stageEl = document.getElementById('stage');
+    const stageWidth = stageEl.clientWidth;
+    const stageHeight = stageEl.clientHeight;
+    this.stage = new K.Stage({
+      container: stageId,
+      width: stageWidth,
+      height: stageHeight
+    });
 
     this.settings = {
       prop: 'agents'
