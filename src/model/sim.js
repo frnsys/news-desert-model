@@ -32,14 +32,19 @@ class Sim {
 
   init() {
     // Initialize cells
-    let generators = ['agents', 'wealth', 'values'].reduce((acc, k) => {
+    let generators = ['agents', 'wealth'].reduce((acc, k) => {
       acc[k] = new Noise(Math.random());
       return acc;
     }, {});
+    generators['values'] = Prob.normal(0.5, 0.1);
     this.grid.cells.forEach((cell) => {
       let [r, c] = cell.pos;
       Object.keys(generators).forEach((k) => {
-        cell[k] = Math.max(0.1, generators[k].simplex2(r/10, c/10));
+        if (k == 'values') {
+          cell[k] = generators[k]();
+        } else {
+          cell[k] = Math.max(0.1, generators[k].simplex2(r/10, c/10));
+        }
       });
       cell.eventGenerator = Prob.poisson(cell.agents);
       cell.publishers = [];

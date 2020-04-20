@@ -6,7 +6,11 @@ import interpolate from 'color-interpolate';
 
 const tipEl = document.getElementById('tip');
 
-const colormap = interpolate(['#FFFFFF', '#0000FF']);
+const colormaps = {
+  agents: interpolate(['#FFFFFF', '#0000FF']),
+  wealth: interpolate(['#FFFFFF', '#9504d3']),
+  values: interpolate(['#f9714f', '#FFFFFF', '#4f80f9'])
+};
 const colormap2 = interpolate(['#FFFFFF', '#000000']);
 const colormap3 = interpolate(['#FF0000', '#00FF00']);
 const colormap4 = interpolate(['#c4fcd7', '#25ba56']);
@@ -32,7 +36,8 @@ class SimUI {
     this.pane.addInput(this.settings, 'prop', {
       options: {
         agents: 'agents',
-        wealth: 'wealth'
+        wealth: 'wealth',
+        values: 'values'
       }
     }).on('change', (val) => {
       this.setProperty(val);
@@ -107,7 +112,7 @@ class SimUI {
         let c = grid.cell(cell.pos);
         if (c.publisher) {
           this.showRadius(cell.pos, c.publisher.radius, (cell, pos) => {
-            cell.baseColor = colormap(grid.cell(cell.pos)[settings.prop]);
+            cell.baseColor = colormaps[settings.prop](grid.cell(cell.pos)[settings.prop]);
             return cell.baseColor;
           });
           highlightedPubs.forEach((circ) => {
@@ -154,16 +159,12 @@ class SimUI {
         let cell = grid.cell([r, c]);
         let color = '#000000';
         switch (prop) {
-          case 'agents':
-            color = colormap(cell.agents);
-            break;
-          case 'wealth':
-            color = colormap(cell.wealth);
-            break;
           case 'mix':
             let colorA = new Color(colormap2(cell.agents));
             let colorB = new Color(colormap3(cell.wealth));
             color = colorA.mix(colorB, 0.5).hex();
+          default:
+            color = colormaps[prop](cell[prop]);
         }
         cellUI.baseColor = color;
         cellUI.fill(color).draw();
