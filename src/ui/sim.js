@@ -18,6 +18,12 @@ const colormap3 = interpolate(['#FF0000', '#00FF00']);
 const colormap4 = interpolate(['#c4fcd7', '#25ba56']);
 const colormap5 = interpolate(['red', 'yellow']);
 
+const EWMA_ALPHA = 0.7;
+function ewma(val, prev) {
+  return EWMA_ALPHA * val + (1 - EWMA_ALPHA) * prev;
+}
+
+
 class SimUI {
   constructor(sim, stageId) {
     this.sim = sim;
@@ -170,6 +176,15 @@ class SimUI {
       }
     });
 
+    this.eventGrid = new HexGridUI(this.stage, grid, 15, {}, {
+      padding: 4,
+      fill: '#ffffff',
+      // visible: false,
+      listening: false,
+      strokeWidth: 0.5
+    });
+    this.eventGrid.layer.hitGraphEnabled(false);
+
     // Setup publishers
     let layer = new K.Layer();
     this.publishers = this.sim.publishers.map((pub) => {
@@ -191,14 +206,6 @@ class SimUI {
     layer.hitGraphEnabled(false);
     this.stage.add(layer);
     this.publishersLayer = layer;
-
-    this.eventGrid = new HexGridUI(this.stage, grid, 15, {}, {
-      padding: 5,
-      visible: false,
-      listening: false,
-      strokeWidth: 0.5
-    });
-    this.eventGrid.layer.hitGraphEnabled(false);
   }
 
   setProperty(prop) {
@@ -247,10 +254,10 @@ class SimUI {
     this.sim.grid.cells.forEach((c) => {
       let cell = this.eventGrid.cell(c.pos);
       if (c.event.n > 0) {
-        cell.fill(colormap5(c.event.reported/c.publishers.length));
-        cell.show();
-      } else {
-        cell.hide();
+        let alive = c.publishers.filter((pub) => !pub.bankrupt);
+        let p = alive.length > 0 ? c.event.reported/alive.length : 0;
+        cell.p = cell.p ? ewma(p, cell.p) : p;
+        cell.fill(colormap5(cell.p));
       }
       cell.draw();
     });
