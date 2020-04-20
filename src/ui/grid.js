@@ -21,9 +21,16 @@ function makeHex(ctx, shape) {
   ctx.fillStrokeShape(shape);
 }
 
+const defaultParams = {
+  padding: 0,
+  strokeWidth: 0.5,
+  visible: true,
+  listening: true
+};
 
 class HexGridUI {
-  constructor(stage, grid, cellSize, eventHandlers) {
+  constructor(stage, grid, cellSize, eventHandlers, params) {
+    this.params = params || defaultParams;
     this.grid = grid;
     this.stage = stage;
     this.eventHandlers = eventHandlers;
@@ -68,11 +75,13 @@ class HexGridUI {
   init() {
     this.hex = new K.Shape({
       sceneFunc: makeHex,
-      width: this.cellSize,
-      height: this.cellSize,
+      width: this.cellSize - (this.params.padding*2),
+      height: this.cellSize - (this.params.padding*2),
       fill: 'blue',
       stroke: 'black',
-      strokeWidth: 0.5
+      strokeWidth: this.params.strokeWidth,
+      visible: this.params.visible,
+      listening: this.params.listening
     });
     this.hex.cache();
 
@@ -87,8 +96,8 @@ class HexGridUI {
       let y = r * (this.cellHeight*3/4) + yCenterOffset;
       this.grid.cols.forEach((c) => {
         let cell = this.hex.clone({
-          x: c * this.cellWidth + xOffset + xCenterOffset,
-          y: y,
+          x: c * this.cellWidth + xOffset + xCenterOffset + this.params.padding,
+          y: y + this.params.padding,
         });
         cell.pos = [r, c];
         this.cells.push(cell);

@@ -5,5 +5,5 @@ const sim = new Sim(40, 40)
 const ui = new SimUI(sim, 'stage');
 setInterval(() => {
   sim.step();
-  ui.showEvents();
+  ui.render();
 }, 1000);

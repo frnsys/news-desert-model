@@ -38,9 +38,30 @@ class SimUI {
       this.setProperty(val);
     });
 
+    Object.keys(this.sim.params).forEach((k) => {
+      this.pane.addInput(this.sim.params, k);
+    });
+
+    // Graphs
+    ['coverage', 'attention', 'users', 'owners'].forEach((k) => {
+      this.pane.addMonitor(this.sim.stats, k, {
+        view: 'graph',
+        min: 0,
+        max: 1
+      });
+    });
+    this.pane.addMonitor(this.sim.stats, 'publishers', {
+      view: 'graph',
+      min: 0,
+      max: this.sim.stats['publishers']
+    });
+    this.pane.addMonitor(this.sim.stats, 'revenue_a');
+    this.pane.addMonitor(this.sim.stats, 'revenue_s');
+
     this.init();
     this.setProperty('agents');
-    this.draw();
+    this.grid.draw();
+    this.eventGrid.draw();
   }
 
   init() {
@@ -50,15 +71,20 @@ class SimUI {
     this.grid = new HexGridUI(this.stage, grid, 15, {
       'mouseenter touchstart': function(ev) {
         let cell = ev.currentTarget;
-        let stageEl = this.stage.attrs.container;
-        let x = stageEl.clientLeft + cell.attrs.x + this.cellSize;
-        let y = stageEl.clientLeft + cell.attrs.y + this.cellHeight/2;
-        tipEl.style.display = 'block';
-        tipEl.style.left = `${x}px`;
-        tipEl.style.top = `${y}px`;
-        tipEl.innerText = 'testing';
         let c = grid.cell(cell.pos);
-        if (c.publisher) {
+        if (c.publisher && !c.publisher.bankrupt) {
+          let stageEl = this.stage.attrs.container;
+          let x = stageEl.clientLeft + cell.attrs.x + this.cellSize;
+          let y = stageEl.clientLeft + cell.attrs.y + this.cellHeight/2;
+          tipEl.style.display = 'block';
+          tipEl.style.left = `${x}px`;
+          tipEl.style.top = `${y}px`;
+          tipEl.innerHTML = `<div>
+            <div>Owner:${c.publisher.owner.name}</div>
+            <div>Civic:${c.publisher.owner.weights.civic.toFixed(2)}</div>
+            <div>Profit:${c.publisher.owner.weights.profit.toFixed(2)}</div>
+          </div>`;
+
           this.showRadius(cell.pos, c.publisher.radius, (c, pos) => {
             let pop = grid.cell(pos).agents;
             let color = cell.pos == pos ? 'red' : colormap4(pop);
@@ -80,22 +106,31 @@ class SimUI {
       }
     });
 
+    this.eventGrid = new HexGridUI(this.stage, grid, 15, {}, {
+      padding: 1.5,
+      visible: false,
+      listening: false,
+      strokeWidth: 0
+    });
+
     // Setup publishers
     let layer = new K.Layer();
-    this.sim.publishers.forEach((pub) => {
+    this.publishers = this.sim.publishers.map((pub) => {
       let cell = this.grid.cell(pub.cell.pos);
       let circ = new K.Circle({
         x: cell.attrs.x + cell.attrs.width/2,
         y: cell.attrs.y + cell.attrs.height/2,
         radius: cell.attrs.width/4,
-        fill: 'orange',
+        fill: '#43CC70', //'orange',
         stroke: 'black',
         strokeWidth: 0.5,
         listening: false
       });
       layer.add(circ);
+      return circ;
     });
     this.stage.add(layer);
+    this.publishersLayer = layer;
   }
 
   setProperty(prop) {
@@ -124,21 +159,34 @@ class SimUI {
   }
 
   showEvents() {
+    this.eventGrid.layer.clear();
     this.sim.grid.cells.forEach((c) => {
-      let cell = this.grid.cell(c.pos);
+      let cell = this.eventGrid.cell(c.pos);
       if (c.event.n > 0) {
-        // cell.fill('yellow');
         cell.fill(colormap5(c.event.reported/c.publishers.length));
-        // gridUI.blink(cell.pos, 'yellow');
+        cell.show();
       } else {
-        cell.fill(cell.baseColor);
+        cell.hide();
       }
       cell.draw();
     });
   }
 
-  draw() {
-    this.grid.draw();
+  showPublishers() {
+    this.publishersLayer.clear();
+    this.sim.publishers.forEach((pub, i) => {
+      if (pub.bankrupt) {
+        this.publishers[i].hide();
+      } else {
+        this.publishers[i].show();
+      }
+      this.publishers[i].draw();
+    });
+  }
+
+  render() {
+    this.showEvents();
+    this.showPublishers();
   }
 }
 
