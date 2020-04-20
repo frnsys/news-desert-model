@@ -1,6 +1,5 @@
 class Owner {
-  constructor(publishers, funds) {
-    this.funds = funds;
+  constructor(publishers) {
     this.publishers = publishers;
     this.name = Math.random().toString(36)
       .replace(/[^a-z]+/g, '').substr(0, 5);
@@ -10,10 +9,11 @@ class Owner {
       civic: p,
       profit: 1-p
     };
+    this.funds = 0;
   }
 
-  buy(publisher) {
-    this.funds -= publisher.owner.funds;
+  buy(publisher, cost) {
+    this.funds -= cost;
     publisher.owner.publishers = publisher.owner.publishers.filter((pub) => pub != publisher);
     publisher.owner = this;
     this.publishers.push(publisher);
@@ -24,6 +24,7 @@ class Publisher {
   constructor(cell, radius, baseFunds) {
     this.cell = cell;
     this.radius = radius;
+    this.funds = baseFunds;
     this.bankrupt = false;
 
     this.eventQueue = [];
@@ -45,16 +46,16 @@ class Publisher {
       if (story.reward == 0) break;
 
       let cost = story.cost * story.ev.n;
-      this.owner.funds -= cost;
+      this.funds -= cost;
       reported.push(story.ev);
-      if (this.owner.funds < 0) break;
+      if (this.funds < 0) break;
     }
     return reported;
   }
 
   reward(event, cost) {
     let cell = event.cell;
-    // if (cost > this.owner.funds) return 0;
+    // if (cost > this.funds) return 0;
     let civic = this.owner.weights.civic * cell.agents;
     let profit = this.owner.weights.profit * (cell.agents * cell.wealth - cost);
     return civic + profit;

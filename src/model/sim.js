@@ -12,7 +12,9 @@ class Sim {
       dataPerUser: 0.01,
       revenuePerAd: 1000,
       revenuePerSub: 10,
-      platformGrowth: 1.005
+      platformGrowth: 1.01,
+      ownerRevenueShare: 0.1,
+      valuationMultiplier: 2
     };
     this.stats = {
       revenue_s: 0,
@@ -20,7 +22,7 @@ class Sim {
       coverage: 0,
       attention: 0,
       users: 0,
-      owners: 0,
+      concen: 0,
       publishers: 0
     };
     this.init();
@@ -112,14 +114,16 @@ class Sim {
       let covered = cell.publishers.filter((pub) => pub.covered.includes(cell));
       let z = covered.length + this.platforms.data;
       covered.forEach((pub) => {
-        let revenue = ads/z;
-        pub.owner.funds += revenue;
-        this.stats.revenue_a += revenue;
+        let adRevenue = ads/z;
+        this.stats.revenue_a += adRevenue;
 
         // Subscribers
         let subscriberRevenue = (cell.agents * cell.wealth)/covered.length * this.params.revenuePerSub;
-        pub.owner.funds += subscriberRevenue;
         this.stats.revenue_s += subscriberRevenue;
+
+        let revenue = adRevenue + subscriberRevenue;
+        pub.funds += (1-this.params.ownerRevenueShare) * revenue;
+        pub.owner.funds += this.params.ownerRevenueShare * revenue;
       });
 
       this.stats.coverage += covered.length > 0 ? 1 : 0;
@@ -132,27 +136,29 @@ class Sim {
 
     // Bankruptcies
     this.publishers.forEach((pub) => {
-      if (!pub.bankrupt && pub.owner.funds < 0) {
+      if (!pub.bankrupt && pub.funds < 0) {
         pub.bankrupt = true;
         this.stats.publishers -= 1;
       }
     });
 
     // Consolidation
-    // let profitOwners = this.owners.filter((own) => own.weights.profit > own.weights.civic);
-    // profitOwners.forEach((own) => {
-    //   this.publishers.forEach((pub) => {
-    //     if (pub.owner == own) return;
-    //     if (pub.owner.funds * 2 < own.funds) {
-    //       own.buy(pub);
-    //     }
-    //   });
-    // });
+    let profitOwners = this.owners.filter((own) => own.weights.profit > own.weights.civic);
+    profitOwners.forEach((own) => {
+      this.publishers.forEach((pub) => {
+        if (pub.owner == own) return;
+
+        let cost = Math.max(0, pub.funds) * this.params.valuationMultiplier;
+        if (cost < own.funds) {
+          own.buy(pub, cost);
+        }
+      });
+    });
 
     this.stats.users = this.platforms.users/this.population;
     this.stats.coverage /= this.grid.cells.length;
     this.stats.attention /= this.grid.cells.length;
-    this.stats.owners = this.owners.reduce((acc, own) => {
+    this.stats.concen = this.owners.reduce((acc, own) => {
       return own.publishers.length > acc ? own.publishers.length : acc
     }, 0)/this.publishers.length;
     return this.stats;

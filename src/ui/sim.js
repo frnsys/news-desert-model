@@ -43,7 +43,7 @@ class SimUI {
     });
 
     // Graphs
-    ['coverage', 'attention', 'users', 'owners'].forEach((k) => {
+    ['coverage', 'attention', 'users', 'concen'].forEach((k) => {
       this.pane.addMonitor(this.sim.stats, k, {
         view: 'graph',
         min: 0,
@@ -66,8 +66,10 @@ class SimUI {
 
   init() {
     // Setup grid
+    let self = this;
     let grid = this.sim.grid;
     let settings = this.settings;
+    let highlightedPubs = [];
     this.grid = new HexGridUI(this.stage, grid, 15, {
       'mouseenter touchstart': function(ev) {
         let cell = ev.currentTarget;
@@ -87,9 +89,15 @@ class SimUI {
 
           this.showRadius(cell.pos, c.publisher.radius, (c, pos) => {
             let pop = grid.cell(pos).agents;
-            let color = cell.pos == pos ? 'red' : colormap4(pop);
+            let color = colormap4(pop);
             c.baseColor = color;
             return color;
+          });
+          self.publishers.forEach((circ) => {
+            if (circ.publisher.owner == c.publisher.owner) {
+              circ.fill('black').draw();
+              highlightedPubs.push(circ);
+            }
           });
         }
       },
@@ -102,6 +110,10 @@ class SimUI {
             cell.baseColor = colormap(grid.cell(cell.pos)[settings.prop]);
             return cell.baseColor;
           });
+          highlightedPubs.forEach((circ) => {
+            circ.fill('#43CC70').draw();
+          });
+          highlightedPubs = [];
         }
       }
     });
@@ -126,6 +138,7 @@ class SimUI {
         strokeWidth: 0.5,
         listening: false
       });
+      circ.publisher = pub;
       layer.add(circ);
       return circ;
     });
