@@ -10,6 +10,7 @@ const colormap = interpolate(['#FFFFFF', '#0000FF']);
 const colormap2 = interpolate(['#FFFFFF', '#000000']);
 const colormap3 = interpolate(['#FF0000', '#00FF00']);
 const colormap4 = interpolate(['#c4fcd7', '#25ba56']);
+const colormap5 = interpolate(['red', 'yellow']);
 
 class SimUI {
   constructor(sim, stage) {
@@ -117,8 +118,9 @@ class SimUI {
   showEvents() {
     this.sim.grid.cells.forEach((c) => {
       let cell = this.grid.cell(c.pos);
-      if (c.events > 0) {
-        cell.fill('yellow');
+      if (c.event.n > 0) {
+        // cell.fill('yellow');
+        cell.fill(colormap5(c.event.reported/c.publishers.length));
         // gridUI.blink(cell.pos, 'yellow');
       } else {
         cell.fill(cell.baseColor);

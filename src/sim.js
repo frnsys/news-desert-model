@@ -7,7 +7,8 @@ class Sim {
   constructor(rows, cols) {
     this.grid = new HexGrid(rows, cols);
     this.params = {
-      baseFunds: 10
+      baseFunds: 2000,
+      baseCost: 1
     };
     this.init();
   }
@@ -33,7 +34,7 @@ class Sim {
       if (Math.random() < cell.agents**2) {
         let r = cell.agents * Math.random();
         r = Math.ceil(Math.max(this.grid.nRows, this.grid.nCols) * r);
-        cell.publisher = new Publisher(cell, r, this.params.baseFunds);
+        cell.publisher = new Publisher(cell, r, this.params.baseFunds * cell.agents * Math.random());
         this.grid.radius(cell.pos, r).forEach((pos) => {
           this.grid.cell(pos).publishers.push(cell.publisher);
         });
@@ -45,20 +46,28 @@ class Sim {
   step() {
     // Generate events
     this.grid.cells.forEach((cell) => {
-      cell.events = cell.eventGenerator();
-      if (cell.events > 0) {
+      let nEvents = cell.eventGenerator();
+      // TODO aren't using multiple events per cell yet
+      cell.event = {
+        cell: cell,
+        reported: 0,
+        n: nEvents
+      };
+      if (nEvents > 0) {
         cell.publishers.forEach((pub) => {
-          pub.eventQueue.push({ cell });
+          pub.eventQueue.push(cell.event);
         });
       }
     });
 
-    // publishers.forEach((pub, i) => {
-    //   let reported = pub.report(pub.eventQueue, {
-    //     baseCost: 1
-    //   });
-    //   pub.eventQueue = [];
-    // });
+    this.publishers.forEach((pub, i) => {
+      // TODO aren't using multiple events per cell yet
+      let reported = pub.report(pub.eventQueue, this.params);
+      reported.forEach((event) => {
+        event.reported += 1;
+      });
+      pub.eventQueue = [];
+    });
   }
 }
 
