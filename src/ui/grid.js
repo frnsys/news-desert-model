@@ -81,7 +81,9 @@ class HexGridUI {
       stroke: 'black',
       strokeWidth: this.params.strokeWidth,
       visible: this.params.visible,
-      listening: this.params.listening
+      listening: this.params.listening,
+      transformsEnabled: 'position',
+      perfectDrawEnabled: false
     });
     this.hex.cache();
 

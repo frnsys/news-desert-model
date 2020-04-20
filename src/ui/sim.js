@@ -9,7 +9,9 @@ const tipEl = document.getElementById('tip');
 const colormaps = {
   agents: interpolate(['#FFFFFF', '#0000FF']),
   wealth: interpolate(['#FFFFFF', '#9504d3']),
-  values: interpolate(['#f9714f', '#FFFFFF', '#4f80f9'])
+  values: interpolate(['#f9714f', '#FFFFFF', '#4f80f9']),
+  radius: interpolate(['#ffffff', '#1e1e1e']),
+  weights: interpolate(['#f4d402', '#FFFFFF', '#5702f4'])
 };
 const colormap2 = interpolate(['#FFFFFF', '#000000']);
 const colormap3 = interpolate(['#FF0000', '#00FF00']);
@@ -30,10 +32,17 @@ class SimUI {
     });
 
     this.settings = {
-      prop: 'agents'
+      prop: 'agents',
+      propOpacity: 1,
+      pubs: 'none',
+      pubsOpacity: 1,
+      eventsOpacity: 1
     };
     this.pane = new Tweakpane();
-    this.pane.addInput(this.settings, 'prop', {
+    let ui = this.pane.addFolder({
+      title: 'UI'
+    });
+    ui.addInput(this.settings, 'prop', {
       options: {
         agents: 'agents',
         wealth: 'wealth',
@@ -42,29 +51,66 @@ class SimUI {
     }).on('change', (val) => {
       this.setProperty(val);
     });
+    ui.addInput(this.settings, 'propOpacity', {
+      min: 0,
+      max: 1
+    }).on('change', (val) => {
+      this.grid.layer.opacity(val);
+      this.grid.layer.batchDraw();
+    });
+    ui.addInput(this.settings, 'pubs', {
+      options: {
+        none: 'none',
+        weights: 'weights',
+        radius: 'radius'
+      }
+    }).on('change', (val) => {
+      this.setPubProperty(val);
+    });
+    ui.addInput(this.settings, 'pubsOpacity', {
+      min: 0,
+      max: 1
+    }).on('change', (val) => {
+      this.publishersLayer.opacity(val);
+      this.publishersLayer.batchDraw();
+    });
+    ui.addInput(this.settings, 'eventsOpacity', {
+      min: 0,
+      max: 1
+    }).on('change', (val) => {
+      this.eventGrid.layer.opacity(val);
+      this.eventGrid.layer.batchDraw();
+    });
 
+    let params = this.pane.addFolder({
+      title: 'Parameters'
+    });
     Object.keys(this.sim.params).forEach((k) => {
-      this.pane.addInput(this.sim.params, k);
+      params.addInput(this.sim.params, k);
     });
 
     // Graphs
-    ['coverage', 'attention', 'users', 'concen'].forEach((k) => {
-      this.pane.addMonitor(this.sim.stats, k, {
+    let graphs = this.pane.addFolder({
+      title: 'Graphs'
+    });
+    ['coverage', 'attention', 'users', 'concen', 'profit'].forEach((k) => {
+      graphs.addMonitor(this.sim.stats, k, {
         view: 'graph',
         min: 0,
         max: 1
       });
     });
-    this.pane.addMonitor(this.sim.stats, 'publishers', {
+    graphs.addMonitor(this.sim.stats, 'publishers', {
       view: 'graph',
       min: 0,
       max: this.sim.stats['publishers']
     });
-    this.pane.addMonitor(this.sim.stats, 'revenue_a');
-    this.pane.addMonitor(this.sim.stats, 'revenue_s');
+    graphs.addMonitor(this.sim.stats, 'revenue_a');
+    graphs.addMonitor(this.sim.stats, 'revenue_s');
 
     this.init();
     this.setProperty('agents');
+    this.setPubProperty('none');
     this.grid.draw();
     this.eventGrid.draw();
   }
@@ -90,6 +136,7 @@ class SimUI {
             <div>Owner:${c.publisher.owner.name}</div>
             <div>Civic:${c.publisher.owner.weights.civic.toFixed(2)}</div>
             <div>Profit:${c.publisher.owner.weights.profit.toFixed(2)}</div>
+            <div>Funds:${c.publisher.funds.toFixed(0)}</div>
           </div>`;
 
           this.showRadius(cell.pos, c.publisher.radius, (c, pos) => {
@@ -116,18 +163,11 @@ class SimUI {
             return cell.baseColor;
           });
           highlightedPubs.forEach((circ) => {
-            circ.fill('#43CC70').draw();
+            circ.fill(circ.baseColor).draw();
           });
           highlightedPubs = [];
         }
       }
-    });
-
-    this.eventGrid = new HexGridUI(this.stage, grid, 15, {}, {
-      padding: 1.5,
-      visible: false,
-      listening: false,
-      strokeWidth: 0
     });
 
     // Setup publishers
@@ -141,14 +181,24 @@ class SimUI {
         fill: '#43CC70', //'orange',
         stroke: 'black',
         strokeWidth: 0.5,
-        listening: false
+        listening: false,
+        perfectDrawEnabled: false
       });
       circ.publisher = pub;
       layer.add(circ);
       return circ;
     });
+    layer.hitGraphEnabled(false);
     this.stage.add(layer);
     this.publishersLayer = layer;
+
+    this.eventGrid = new HexGridUI(this.stage, grid, 15, {}, {
+      padding: 5,
+      visible: false,
+      listening: false,
+      strokeWidth: 0.5
+    });
+    this.eventGrid.layer.hitGraphEnabled(false);
   }
 
   setProperty(prop) {
@@ -163,12 +213,32 @@ class SimUI {
             let colorA = new Color(colormap2(cell.agents));
             let colorB = new Color(colormap3(cell.wealth));
             color = colorA.mix(colorB, 0.5).hex();
+            break;
           default:
             color = colormaps[prop](cell[prop]);
         }
         cellUI.baseColor = color;
         cellUI.fill(color).draw();
       });
+    });
+  }
+
+  setPubProperty(prop) {
+    this.sim.publishers.forEach((pub, i) => {
+      let circ = this.publishers[i];
+      if (prop == 'none') {
+        circ.baseColor = '#43CC70'
+      } else {
+        let cmap = colormaps[prop];
+        if (prop == 'weights') {
+          circ.baseColor = cmap(pub.owner.weights.civic);
+        } else if (prop == 'radius') {
+          let r = pub.radius/Math.max(this.sim.grid.nRows, this.sim.grid.nCols);
+          circ.baseColor = cmap(r);
+        }
+      }
+
+      circ.fill(circ.baseColor).draw();
     });
   }
 

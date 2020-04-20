@@ -25,7 +25,8 @@ class Sim {
       attention: 0,
       users: 0,
       concen: 0,
-      publishers: 0
+      publishers: 0,
+      profit: 0
     };
     this.init();
   }
@@ -41,7 +42,7 @@ class Sim {
       let [r, c] = cell.pos;
       Object.keys(generators).forEach((k) => {
         if (k == 'values') {
-          cell[k] = generators[k]();
+          cell[k] = Math.max(0, Math.min(1, generators[k]()));
         } else {
           cell[k] = Math.max(0.1, generators[k].simplex2(r/10, c/10));
         }
@@ -56,7 +57,7 @@ class Sim {
       if (Math.random() < (cell.agents + cell.wealth)**2/2) {
         let r = cell.agents * Math.random();
         r = Math.ceil(Math.max(this.grid.nRows, this.grid.nCols) * r);
-        cell.publisher = new Publisher(cell, r, this.params.baseFunds * cell.agents * cell.wealth);
+        cell.publisher = new Publisher(cell, r, this.params.baseFunds * cell.agents * (1 + cell.wealth));
         let area = this.grid.radius(cell.pos, r).map((pos) => this.grid.cell(pos));
         area.forEach((c) => {
           c.publishers.push(cell.publisher);
@@ -151,15 +152,21 @@ class Sim {
 
     // Consolidation
     let profitOwners = this.owners.filter((own) => own.weights.profit > own.weights.civic);
-    let buyable = this.publishers.filter((pub) => !pub.bankrupt);
+    profitOwners.sort(() => Math.random() - 0.5);
+    let alive = this.publishers.filter((pub) => !pub.bankrupt);
+    alive.sort((a, b) => b.civic - a.civic);
+    let bought = new Set();
     profitOwners.forEach((own) => {
-      if (own.publishers.length/buyable >= this.params.ownershipLimit) return;
-      buyable.forEach((pub) => {
+      if (own.publishers.length/alive >= this.params.ownershipLimit) return;
+
+      alive.forEach((pub) => {
         if (pub.owner == own) return;
+        if (bought.has(pub)) return;
 
         let cost = Math.max(0, pub.funds) * this.params.valuationMultiplier * this.params.economy;
         if (cost < own.funds) {
           own.buy(pub, cost);
+          bought.add(pub);
         }
       });
     });
@@ -167,10 +174,11 @@ class Sim {
     this.stats.users = this.platforms.users/this.population;
     this.stats.coverage /= this.grid.cells.length;
     this.stats.attention /= this.grid.cells.length;
+    this.stats.profit = alive.reduce((acc, pub) => acc + pub.owner.weights.profit, 0)/alive.length
     this.stats.concen = this.owners.reduce((acc, own) => {
       own.publishers = own.publishers.filter((pub) => !pub.bankrupt);
       return own.publishers.length > acc ? own.publishers.length : acc
-    }, 0)/buyable.length;
+    }, 0)/alive.length;
     return this.stats;
   }
 }
