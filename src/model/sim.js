@@ -8,7 +8,6 @@ class Sim {
   constructor(rows, cols, seed) {
     this.size = [rows, cols];
     this.seed = seed || Math.random();
-    this.rng = seedrandom(this.seed);
     this.params = {
       baseFunds: 5000,
       baseCost: 2,
@@ -26,6 +25,8 @@ class Sim {
   }
 
   reset() {
+    this.rng = seedrandom(this.seed);
+
     this.steps = 0;
     this.stats = {
       revenue_s: 0,
