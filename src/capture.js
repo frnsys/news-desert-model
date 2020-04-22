@@ -15,40 +15,31 @@ class CapturedRun {
     let complete = 0;
     let layers = this.ui.stage.getLayers();
     let fname = String(this.sim.steps).padStart(4, '0');
-    layers.forEach((layer, i) => {
-      let folder = folders[i];
-      let canvas = layer.getCanvas()._canvas;
-      canvas.toBlob((blob) => {
-        complete += 1;
-        folder.file(`${fname}.png`, blob);
-
-        if (complete == layers.length+1) {
-          if (this.sim.steps < this.steps) {
-            this.step(zip, folders, composite);
-          } else {
-            zip.generateAsync({type: 'blob'})
-              .then(function(content) {
-                saveAs(content, 'news-model.zip');
-              });
-          }
-        }
-      });
-    });
-    let canvas = this.ui.stage.toCanvas();
-    canvas.toBlob((blob) => {
+    let onComplete = () => {
       complete += 1;
-      composite.file(`${fname}.png`, blob);
-
       if (complete == layers.length+1) {
         if (this.sim.steps < this.steps) {
           this.step(zip, folders, composite);
         } else {
           zip.generateAsync({type: 'blob'})
             .then(function(content) {
-              saveAs(content, 'model.zip');
+              saveAs(content, 'news-model.zip');
             });
         }
       }
+    }
+    layers.forEach((layer, i) => {
+      let folder = folders[i];
+      let canvas = layer.getCanvas()._canvas;
+      canvas.toBlob((blob) => {
+        folder.file(`${fname}.png`, blob);
+        onComplete();
+      });
+    });
+    let canvas = this.ui.stage.toCanvas();
+    canvas.toBlob((blob) => {
+      composite.file(`${fname}.png`, blob);
+      onComplete();
     });
   }
 
