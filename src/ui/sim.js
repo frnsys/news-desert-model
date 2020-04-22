@@ -25,8 +25,9 @@ function ewma(val, prev) {
 
 
 class SimUI {
-  constructor(sim, stageId) {
+  constructor(sim, stageId, cellSize) {
     this.sim = sim;
+    this.cellSize = cellSize || 15;
 
     const stageEl = document.getElementById('stage');
     const stageWidth = stageEl.clientWidth;
@@ -127,7 +128,7 @@ class SimUI {
     let grid = this.sim.grid;
     let settings = this.settings;
     let highlightedPubs = [];
-    this.grid = new HexGridUI(this.stage, grid, 15, {
+    this.grid = new HexGridUI(this.stage, grid, this.cellSize, {
       'mouseenter touchstart': function(ev) {
         let cell = ev.currentTarget;
         let c = grid.cell(cell.pos);
@@ -176,7 +177,7 @@ class SimUI {
       }
     });
 
-    this.eventGrid = new HexGridUI(this.stage, grid, 15, {}, {
+    this.eventGrid = new HexGridUI(this.stage, grid, this.cellSize, {}, {
       padding: 4,
       fill: '#ffffff',
       // visible: false,
