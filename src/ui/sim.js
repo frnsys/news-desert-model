@@ -46,6 +46,13 @@ class SimUI {
       eventsOpacity: 1
     };
     this.pane = new Tweakpane();
+    this.pane.addButton({
+      title: 'Restart'
+    }).on('click', () => {
+      this.sim.reset();
+      this.reset();
+    });
+    this.pane.addMonitor(this.sim, 'steps');
     let ui = this.pane.addFolder({
       title: 'UI'
     });
@@ -115,14 +122,13 @@ class SimUI {
     graphs.addMonitor(this.sim.stats, 'revenue_a');
     graphs.addMonitor(this.sim.stats, 'revenue_s');
 
-    this.init();
-    this.setProperty('agents');
-    this.setPubProperty('none');
-    this.grid.draw();
-    this.eventGrid.draw();
+    this.reset();
   }
 
-  init() {
+  reset() {
+    this.stage.clear();
+    this.stage.getLayers().forEach((l) => l.destroy());
+
     // Setup grid
     let self = this;
     let grid = this.sim.grid;
@@ -207,6 +213,11 @@ class SimUI {
     layer.hitGraphEnabled(false);
     this.stage.add(layer);
     this.publishersLayer = layer;
+
+    this.setProperty('agents');
+    this.setPubProperty('none');
+    this.grid.draw();
+    this.eventGrid.draw();
   }
 
   setProperty(prop) {
@@ -268,9 +279,7 @@ class SimUI {
     this.publishersLayer.clear();
     this.sim.publishers.forEach((pub, i) => {
       if (pub.bankrupt) {
-        this.publishers[i].hide();
-      } else {
-        this.publishers[i].show();
+        this.publishers[i].fill('#dadada');
       }
       this.publishers[i].draw();
     });

@@ -6,10 +6,9 @@ import seedrandom from 'seedrandom';
 
 class Sim {
   constructor(rows, cols, seed) {
+    this.size = [rows, cols];
     this.seed = seed || Math.random();
     this.rng = seedrandom(this.seed);
-
-    this.grid = new HexGrid(rows, cols);
     this.params = {
       baseFunds: 5000,
       baseCost: 2,
@@ -22,6 +21,12 @@ class Sim {
       ownershipLimit: 0.1,
       economy: 1
     };
+
+    this.reset();
+  }
+
+  reset() {
+    this.steps = 0;
     this.stats = {
       revenue_s: 0,
       revenue_a: 0,
@@ -32,10 +37,9 @@ class Sim {
       publishers: 0,
       profit: 0
     };
-    this.init();
-  }
 
-  init() {
+    this.grid = new HexGrid(...this.size);
+
     // Initialize cells
     let generators = ['agents', 'wealth'].reduce((acc, k) => {
       acc[k] = new Noise(this.rng());
@@ -86,6 +90,7 @@ class Sim {
   }
 
   step() {
+    this.steps += 1;
     this.stats.revenue_a = 0;
     this.stats.revenue_s = 0;
     this.stats.coverage = 0;
