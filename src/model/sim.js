@@ -2,9 +2,13 @@ import HexGrid from './grid';
 import Publisher from './publisher';
 import {Noise} from 'noisejs';
 import Prob from 'prob.js';
+import seedrandom from 'seedrandom';
 
 class Sim {
-  constructor(rows, cols) {
+  constructor(rows, cols, seed) {
+    this.seed = seed || Math.random();
+    this.rng = seedrandom(this.seed);
+
     this.grid = new HexGrid(rows, cols);
     this.params = {
       baseFunds: 5000,
@@ -34,7 +38,7 @@ class Sim {
   init() {
     // Initialize cells
     let generators = ['agents', 'wealth'].reduce((acc, k) => {
-      acc[k] = new Noise(Math.random());
+      acc[k] = new Noise(this.rng());
       return acc;
     }, {});
     generators['values'] = Prob.normal(0.5, 0.1);
@@ -54,10 +58,10 @@ class Sim {
     // Initialize publishers
     this.publishers = [];
     this.grid.cells.forEach((cell) => {
-      if (Math.random() < (cell.agents + cell.wealth)**2/2) {
-        let r = cell.agents * Math.random();
+      if (this.rng() < (cell.agents + cell.wealth)**2/2) {
+        let r = cell.agents * this.rng();
         r = Math.ceil(Math.max(this.grid.nRows, this.grid.nCols) * r);
-        cell.publisher = new Publisher(cell, r, this.params.baseFunds * cell.agents * (1 + cell.wealth));
+        cell.publisher = new Publisher(cell, r, this.params.baseFunds * cell.agents * (1 + cell.wealth), this.rng);
         let area = this.grid.radius(cell.pos, r).map((pos) => this.grid.cell(pos));
         area.forEach((c) => {
           c.publishers.push(cell.publisher);
@@ -152,7 +156,7 @@ class Sim {
 
     // Consolidation
     let profitOwners = this.owners.filter((own) => own.weights.profit > own.weights.civic);
-    profitOwners.sort(() => Math.random() - 0.5);
+    profitOwners.sort(() => this.rng() - 0.5);
     let alive = this.publishers.filter((pub) => !pub.bankrupt);
     alive.sort((a, b) => b.civic - a.civic);
     let bought = new Set();

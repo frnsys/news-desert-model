@@ -1,10 +1,10 @@
 class Owner {
-  constructor(publishers) {
+  constructor(publishers, rng) {
     this.publishers = publishers;
-    this.name = Math.random().toString(36)
+    this.name = rng().toString(36)
       .replace(/[^a-z]+/g, '').substr(0, 5);
 
-    let p = Math.random();
+    let p = rng();
     this.weights = {
       civic: p,
       profit: 1-p
@@ -21,14 +21,14 @@ class Owner {
 }
 
 class Publisher {
-  constructor(cell, radius, baseFunds) {
+  constructor(cell, radius, baseFunds, rng) {
     this.cell = cell;
     this.radius = radius;
     this.funds = baseFunds;
     this.bankrupt = false;
 
     this.eventQueue = [];
-    this.owner = new Owner([this], baseFunds);
+    this.owner = new Owner([this], rng);
   }
 
   report(events, params) {
