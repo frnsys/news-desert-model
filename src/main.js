@@ -16,7 +16,9 @@ if (rec) {
 } else {
   const interval = 200;
   setInterval(() => {
-    sim.step();
-    ui.render();
+    if (!ui.paused) {
+      sim.step();
+      ui.render();
+    }
   }, interval);
 }

@@ -27,6 +27,7 @@ function ewma(val, prev) {
 class SimUI {
   constructor(sim, stageId, cellSize) {
     this.sim = sim;
+    this.paused = false;
     this.cellSize = cellSize || 15;
 
     const stageEl = document.getElementById('stage');
@@ -46,12 +47,19 @@ class SimUI {
       eventsOpacity: 1
     };
     this.pane = new Tweakpane();
+    let but = this.pane.addButton({
+      title: 'Pause'
+    }).on('click', () => {
+      this.paused = !this.paused;
+      but.controller.view.buttonElem_.innerText = this.paused ? 'Resume' : 'Pause';
+    });
     this.pane.addButton({
       title: 'Restart'
     }).on('click', () => {
       this.sim.reset();
       this.reset();
     });
+
     this.pane.addMonitor(this.sim, 'steps');
     let ui = this.pane.addFolder({
       title: 'UI'
