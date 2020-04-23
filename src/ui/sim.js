@@ -10,7 +10,7 @@ const colormaps = {
   agents: interpolate(['#FFFFFF', '#0000FF']),
   wealth: interpolate(['#FFFFFF', '#9504d3']),
   values: interpolate(['#f9714f', '#FFFFFF', '#4f80f9']),
-  radius: interpolate(['#ffffff', '#1e1e1e']),
+  radius: interpolate(['#d6fcd4', '#0e7507']),
   weights: interpolate(['#f4d402', '#FFFFFF', '#5702f4'])
 };
 const colormap2 = interpolate(['#FFFFFF', '#000000']);

@@ -63,10 +63,11 @@ class Sim {
     // Initialize publishers
     this.publishers = [];
     this.grid.cells.forEach((cell) => {
-      if (this.rng() < (cell.agents + cell.wealth)**2/2) {
+      if (this.rng() < (cell.agents**2 + cell.wealth**2)/2) {
         let r = cell.agents * this.rng();
         r = Math.ceil(Math.max(this.grid.nRows, this.grid.nCols) * r);
-        cell.publisher = new Publisher(cell, r, this.params.baseFunds * cell.agents * (1 + cell.wealth), this.rng);
+        let funds = this.params.baseFunds * cell.agents * (1 + cell.wealth);
+        cell.publisher = new Publisher(cell, r, funds, this.rng);
         let area = this.grid.radius(cell.pos, r).map((pos) => this.grid.cell(pos));
         area.forEach((c) => {
           c.publishers.push(cell.publisher);
