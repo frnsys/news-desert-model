@@ -9,11 +9,13 @@ class Sim {
     this.size = [rows, cols];
     this.seed = seed || Math.random();
     this.params = {
+      subsidy: 0,
       baseFunds: 5000,
       baseCost: 2,
       dataPerUser: 0.01,
+      subRate: 0.1,
       revenuePerAd: 1000,
-      revenuePerSub: 10,
+      revenuePerSub: 100,
       platformGrowth: 1.01,
       ownerRevenueShare: 0.1,
       valuationMultiplier: 2,
@@ -115,6 +117,7 @@ class Sim {
 
     // Publishers report on events
     this.publishers.forEach((pub, i) => {
+      pub.funds += this.params.subsidy;
       pub.covered = new Set();
       if (!pub.bankrupt) {
         let reported = pub.report(pub.eventQueue, this.params);
@@ -137,7 +140,7 @@ class Sim {
         this.stats.revenue_a += adRevenue;
 
         // Subscribers
-        let subscriberRevenue = (cell.agents * cell.wealth)/covered.length * this.params.revenuePerSub * this.params.economy;
+        let subscriberRevenue = (cell.agents * cell.wealth)/covered.length * this.params.subRate * this.params.revenuePerSub * this.params.economy;
         this.stats.revenue_s += subscriberRevenue;
 
         let revenue = adRevenue + subscriberRevenue;

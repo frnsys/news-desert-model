@@ -11,7 +11,7 @@ const colormaps = {
   wealth: interpolate(['#FFFFFF', '#9504d3']),
   values: interpolate(['#f9714f', '#FFFFFF', '#4f80f9']),
   radius: interpolate(['#d6fcd4', '#0e7507']),
-  weights: interpolate(['#f4d402', '#FFFFFF', '#5702f4'])
+  weights: interpolate(['#9504d3', '#5702f4', '#FFFFFF'])
 };
 const colormap2 = interpolate(['#FFFFFF', '#000000']);
 const colormap3 = interpolate(['#FF0000', '#00FF00']);
