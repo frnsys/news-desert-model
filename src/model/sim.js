@@ -33,7 +33,6 @@ class Sim {
     this.stats = {
       revenue_s: 0,
       revenue_a: 0,
-      coverage: 0,
       attention: 0,
       users: 0,
       concen: 0,
@@ -97,7 +96,6 @@ class Sim {
     this.steps += 1;
     this.stats.revenue_a = 0;
     this.stats.revenue_s = 0;
-    this.stats.coverage = 0;
     this.stats.attention = 0;
 
     // Generate events
@@ -148,7 +146,6 @@ class Sim {
         pub.owner.funds += this.params.ownerRevenueShare * revenue;
       });
 
-      this.stats.coverage += covered.length > 0 ? 1 : 0;
       this.stats.attention += covered.length/cell.publishers.length;
     });
 
@@ -186,7 +183,6 @@ class Sim {
     });
 
     this.stats.users = this.platforms.users/this.population;
-    this.stats.coverage /= this.grid.cells.length;
     this.stats.attention /= this.grid.cells.length;
     this.stats.profit = alive.reduce((acc, pub) => acc + pub.owner.weights.profit, 0)/alive.length
     this.stats.concen = this.owners.reduce((acc, own) => {

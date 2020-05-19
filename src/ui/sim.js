@@ -5,6 +5,7 @@ import Tweakpane from 'tweakpane';
 import interpolate from 'color-interpolate';
 
 const tipEl = document.getElementById('tip');
+const coverageEl = document.getElementById('coverage');
 
 const colormaps = {
   agents: interpolate(['#FFFFFF', '#0000FF']),
@@ -115,7 +116,7 @@ class SimUI {
     let graphs = this.pane.addFolder({
       title: 'Graphs'
     });
-    ['coverage', 'attention', 'users', 'concen', 'profit'].forEach((k) => {
+    ['attention', 'users', 'concen', 'profit'].forEach((k) => {
       graphs.addMonitor(this.sim.stats, k, {
         view: 'graph',
         min: 0,
@@ -270,17 +271,26 @@ class SimUI {
   }
 
   showEvents() {
+    let mean = 0;
+    let count = 0;
+    let deserts = 0;
     this.eventGrid.layer.clear();
     this.sim.grid.cells.forEach((c) => {
       let cell = this.eventGrid.cell(c.pos);
       if (c.event.n > 0) {
         let alive = c.publishers.filter((pub) => !pub.bankrupt);
         let p = alive.length > 0 ? c.event.reported/alive.length : 0;
+        mean += p;
+        deserts += p > 0 ? 0 : 1;
+        count += 1;
         cell.p = cell.p ? ewma(p, cell.p) : p;
         cell.fill(colormap5(cell.p));
       }
       cell.draw();
     });
+    mean /= count;
+    deserts /= count;
+    coverageEl.innerText = `Coverage: ${(mean*100).toFixed(1)}% (${(deserts*100).toFixed(1)}% deserts)`;
   }
 
   showPublishers() {
