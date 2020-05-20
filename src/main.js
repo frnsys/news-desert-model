@@ -5,9 +5,24 @@ import CapturedRun from './capture';
 const url = new URL(window.location.href);
 const rec = url.searchParams.get('record') !== null;
 
-// const sim = new Sim(10, 10);
-const sim = new Sim(40, 40);
-const ui = new SimUI(sim, 'stage', 15);
+const tipEl = document.getElementById('tip');
+const sim = new Sim(40, 40, {
+  mouseenter: (c) => {
+    tipEl.style.display = 'block';
+    tipEl.style.left = `${x}px`;
+    tipEl.style.top = `${y}px`;
+    tipEl.innerHTML = `<div>
+      <div>Owner:${c.publisher.owner.name}</div>
+      <div>Civic:${c.publisher.owner.weights.civic.toFixed(2)}</div>
+      <div>Profit:${c.publisher.owner.weights.profit.toFixed(2)}</div>
+      <div>Funds:${c.publisher.funds.toFixed(0)}</div>
+    </div>`;
+  },
+  mouseleave: (c) => {
+   tipEl.style.display = 'none';
+  }
+});
+const ui = new SimUI(sim, 'stage');
 
 if (rec) {
   const steps = url.searchParams.get('steps') || 100;

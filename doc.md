@@ -29,9 +29,25 @@ The model consists of a hexagonal grid world. Each hexagon (_cell_) has a _popul
 
 ![Cell population and wealth](img/cells.png)
 
+<div class="figure">
+    <div class="reset-button button">Reset</div>
+    <div class="stages">
+        <div id="stage-1" class="stage"></div>
+        <div id="stage-2" class="stage"></div>
+    </div>
+</div>
+
 ### Publishers
 
 _Publishers_ are also generated randomly; a cell's likelihood of having a publisher is determined by its population and wealth. More densely-populated and wealthier cells are more likely to have publishers.
+
+<div class="figure">
+    <div class="reset-button button">Reset</div>
+    <div class="stages">
+        <div id="stage-3" class="stage"></div>
+        <div id="stage-4" class="stage"></div>
+    </div>
+</div>
 
 ![Publisher coverage area](img/coverage.png)
 
@@ -54,6 +70,18 @@ Every time step in the model, _events_ happen in cells. The number of events tha
 Reporting on events has a _cost_, determined by the `baseCost` parameter and the event cell's population, such that more densely-populated cells are more costly to cover.
 
 For each event, a publisher asks: "What do I get out of reporting on this event?" The answer is determined by their motives. More _profit-motivated_ publishers emphasize the expected ad profit, which is determined by the wealth of the cell the event occurred in and the reporting costs. Thus they are more likely to cover events in wealthier areas. More _civic-motivated_ publishers, on the other hand, emphasize covering events that affect a lot of people.
+
+<div class="figure">
+    <div class="stages">
+        <div id="stage-5" class="stage"></div>
+        <div id="stage-6" class="stage"></div>
+        <div id="stage-7" class="stage"></div>
+    </div>
+    <div class="stages-control">
+        Civic-motive <input type="range" min="0" max="1" step="0.1" id="motive"> Profit-motive
+        <div id="cell-value">--</div>
+    </div>
+</div>
 
 ### Platforms
 
@@ -145,3 +173,5 @@ A publisher goes bankrupt if it ends the step with ¦f_p < 0¦.
 
 Owners where ¦m_p > m_v¦ (i.e. more profit-motivated than civic-motivated) may purchase more publishers, so long as the percent of publishers they own is less than the `ownershipLimit` parameter. The cost of a publisher ¦p¦ is ¦f_p \upsilon \epsilon¦ where ¦\upsilon¦ is the `valuationMultiplier` parameter. To buy, the interested owner must have enough funds for this cost.
 
+
+<script src="dist/doc.js"></script>

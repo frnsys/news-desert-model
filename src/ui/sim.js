@@ -4,7 +4,6 @@ import HexGridUI from './grid';
 import Tweakpane from 'tweakpane';
 import interpolate from 'color-interpolate';
 
-const tipEl = document.getElementById('tip');
 const coverageEl = document.getElementById('coverage');
 
 const colormaps = {
@@ -26,12 +25,13 @@ function ewma(val, prev) {
 
 
 class SimUI {
-  constructor(sim, stageId, cellSize) {
+  constructor(sim, stageId, opts) {
+    opts = opts || {};
     this.sim = sim;
     this.paused = false;
-    this.cellSize = cellSize || 15;
+    this.cellSize = opts.cellSize || 15;
 
-    const stageEl = document.getElementById('stage');
+    const stageEl = document.getElementById(stageId);
     const stageWidth = stageEl.clientWidth;
     const stageHeight = stageEl.clientHeight;
     this.stage = new K.Stage({
@@ -41,95 +41,101 @@ class SimUI {
     });
 
     this.settings = {
-      prop: 'agents',
       propOpacity: 1,
-      pubs: 'none',
-      pubsOpacity: 1,
-      eventsOpacity: 1
+      pubs: opts.pubs || 'none',
+      prop: opts.prop || 'agents',
+      showRadius: opts.showRadius == undefined ? true : opts.showRadius,
+      pubsOpacity: opts.pubsOpacity == undefined ? 1 : opts.pubsOpacity,
+      eventsOpacity: opts.eventsOpacity == undefined ? 1 : opts.eventsOpacity
     };
-    this.pane = new Tweakpane();
-    let but = this.pane.addButton({
-      title: 'Pause'
-    }).on('click', () => {
-      this.paused = !this.paused;
-      but.controller.view.buttonElem_.innerText = this.paused ? 'Resume' : 'Pause';
-    });
-    this.pane.addButton({
-      title: 'Restart'
-    }).on('click', () => {
-      this.sim.reset();
-      this.reset();
-    });
+    this.mouseenter = opts.mouseenter;
+    this.mouseleave = opts.mouseleave;
 
-    this.pane.addMonitor(this.sim, 'steps');
-    let ui = this.pane.addFolder({
-      title: 'UI'
-    });
-    ui.addInput(this.settings, 'prop', {
-      options: {
-        agents: 'agents',
-        wealth: 'wealth',
-        values: 'values'
-      }
-    }).on('change', (val) => {
-      this.setProperty(val);
-    });
-    ui.addInput(this.settings, 'propOpacity', {
-      min: 0,
-      max: 1
-    }).on('change', (val) => {
-      this.grid.layer.opacity(val);
-      this.grid.layer.batchDraw();
-    });
-    ui.addInput(this.settings, 'pubs', {
-      options: {
-        none: 'none',
-        weights: 'weights',
-        radius: 'radius'
-      }
-    }).on('change', (val) => {
-      this.setPubProperty(val);
-    });
-    ui.addInput(this.settings, 'pubsOpacity', {
-      min: 0,
-      max: 1
-    }).on('change', (val) => {
-      this.publishersLayer.opacity(val);
-      this.publishersLayer.batchDraw();
-    });
-    ui.addInput(this.settings, 'eventsOpacity', {
-      min: 0,
-      max: 1
-    }).on('change', (val) => {
-      this.eventGrid.layer.opacity(val);
-      this.eventGrid.layer.batchDraw();
-    });
+    if (opts.panes) {
+      this.pane = new Tweakpane();
+      let but = this.pane.addButton({
+        title: 'Pause'
+      }).on('click', () => {
+        this.paused = !this.paused;
+        but.controller.view.buttonElem_.innerText = this.paused ? 'Resume' : 'Pause';
+      });
+      this.pane.addButton({
+        title: 'Restart'
+      }).on('click', () => {
+        this.sim.reset();
+        this.reset();
+      });
 
-    let params = this.pane.addFolder({
-      title: 'Parameters'
-    });
-    Object.keys(this.sim.params).forEach((k) => {
-      params.addInput(this.sim.params, k);
-    });
-
-    // Graphs
-    let graphs = this.pane.addFolder({
-      title: 'Graphs'
-    });
-    ['attention', 'users', 'concen', 'profit'].forEach((k) => {
-      graphs.addMonitor(this.sim.stats, k, {
-        view: 'graph',
+      this.pane.addMonitor(this.sim, 'steps');
+      let ui = this.pane.addFolder({
+        title: 'UI'
+      });
+      ui.addInput(this.settings, 'prop', {
+        options: {
+          agents: 'agents',
+          wealth: 'wealth',
+          values: 'values'
+        }
+      }).on('change', (val) => {
+        this.setProperty(val);
+      });
+      ui.addInput(this.settings, 'propOpacity', {
         min: 0,
         max: 1
+      }).on('change', (val) => {
+        this.grid.layer.opacity(val);
+        this.grid.layer.batchDraw();
       });
-    });
-    graphs.addMonitor(this.sim.stats, 'publishers', {
-      view: 'graph',
-      min: 0,
-      max: this.sim.stats['publishers']
-    });
-    graphs.addMonitor(this.sim.stats, 'revenue_a');
-    graphs.addMonitor(this.sim.stats, 'revenue_s');
+      ui.addInput(this.settings, 'pubs', {
+        options: {
+          none: 'none',
+          weights: 'weights',
+          radius: 'radius'
+        }
+      }).on('change', (val) => {
+        this.setPubProperty(val);
+      });
+      ui.addInput(this.settings, 'pubsOpacity', {
+        min: 0,
+        max: 1
+      }).on('change', (val) => {
+        this.publishersLayer.opacity(val);
+        this.publishersLayer.batchDraw();
+      });
+      ui.addInput(this.settings, 'eventsOpacity', {
+        min: 0,
+        max: 1
+      }).on('change', (val) => {
+        this.eventGrid.layer.opacity(val);
+        this.eventGrid.layer.batchDraw();
+      });
+
+      let params = this.pane.addFolder({
+        title: 'Parameters'
+      });
+      Object.keys(this.sim.params).forEach((k) => {
+        params.addInput(this.sim.params, k);
+      });
+
+      // Graphs
+      let graphs = this.pane.addFolder({
+        title: 'Graphs'
+      });
+      ['attention', 'users', 'concen', 'profit'].forEach((k) => {
+        graphs.addMonitor(this.sim.stats, k, {
+          view: 'graph',
+          min: 0,
+          max: 1
+        });
+      });
+      graphs.addMonitor(this.sim.stats, 'publishers', {
+        view: 'graph',
+        min: 0,
+        max: this.sim.stats['publishers']
+      });
+      graphs.addMonitor(this.sim.stats, 'revenue_a');
+      graphs.addMonitor(this.sim.stats, 'revenue_s');
+    }
 
     this.reset();
   }
@@ -147,19 +153,11 @@ class SimUI {
       'mouseenter touchstart': function(ev) {
         let cell = ev.currentTarget;
         let c = grid.cell(cell.pos);
-        if (c.publisher && !c.publisher.bankrupt) {
+        if (self.mouseenter) self.mouseenter(c);
+        if (settings.showRadius && c.publisher && !c.publisher.bankrupt) {
           let stageEl = this.stage.attrs.container;
           let x = stageEl.clientLeft + cell.attrs.x + this.cellSize;
           let y = stageEl.clientLeft + cell.attrs.y + this.cellHeight/2;
-          tipEl.style.display = 'block';
-          tipEl.style.left = `${x}px`;
-          tipEl.style.top = `${y}px`;
-          tipEl.innerHTML = `<div>
-            <div>Owner:${c.publisher.owner.name}</div>
-            <div>Civic:${c.publisher.owner.weights.civic.toFixed(2)}</div>
-            <div>Profit:${c.publisher.owner.weights.profit.toFixed(2)}</div>
-            <div>Funds:${c.publisher.funds.toFixed(0)}</div>
-          </div>`;
 
           this.showRadius(cell.pos, c.publisher.radius, (c, pos) => {
             let pop = grid.cell(pos).agents;
@@ -177,9 +175,9 @@ class SimUI {
       },
       'mouseout touchend': function(ev) {
         let cell = ev.currentTarget;
-        tipEl.style.display = 'none';
         let c = grid.cell(cell.pos);
-        if (c.publisher) {
+        if (self.mouseleave) self.mouseleave(c);
+        if (settings.showRadius && c.publisher) {
           this.showRadius(cell.pos, c.publisher.radius, (cell, pos) => {
             cell.baseColor = colormaps[settings.prop](grid.cell(cell.pos)[settings.prop]);
             return cell.baseColor;
@@ -200,6 +198,7 @@ class SimUI {
       strokeWidth: 0.5
     });
     this.eventGrid.layer.hitGraphEnabled(false);
+    this.eventGrid.layer.opacity(this.settings.eventsOpacity);
 
     // Setup publishers
     let layer = new K.Layer();
@@ -222,28 +221,35 @@ class SimUI {
     layer.hitGraphEnabled(false);
     this.stage.add(layer);
     this.publishersLayer = layer;
+    this.publishersLayer.opacity(this.settings.pubsOpacity);
 
-    this.setProperty('agents');
-    this.setPubProperty('none');
+    this.setProperty(this.settings.prop);
+    this.setPubProperty(this.settings.pubs);
     this.grid.draw();
     this.eventGrid.draw();
+    this.publishersLayer.draw();
   }
 
   setProperty(prop) {
     let grid = this.sim.grid;
+    this.settings.prop = prop;
     grid.rows.forEach((r) => {
       grid.cols.forEach((c) => {
         let cellUI = this.grid.cell([r, c]);
         let cell = grid.cell([r, c]);
         let color = '#000000';
-        switch (prop) {
-          case 'mix':
-            let colorA = new Color(colormap2(cell.agents));
-            let colorB = new Color(colormap3(cell.wealth));
-            color = colorA.mix(colorB, 0.5).hex();
-            break;
-          default:
-            color = colormaps[prop](cell[prop]);
+        if (typeof prop === 'function') {
+          color = prop(cell);
+        } else {
+          switch (prop) {
+            case 'mix':
+              let colorA = new Color(colormap2(cell.agents));
+              let colorB = new Color(colormap3(cell.wealth));
+              color = colorA.mix(colorB, 0.5).hex();
+              break;
+            default:
+              color = colormaps[prop](cell[prop]);
+          }
         }
         cellUI.baseColor = color;
         cellUI.fill(color).draw();
@@ -301,6 +307,12 @@ class SimUI {
       }
       this.publishers[i].draw();
     });
+  }
+
+  resetCell(cell) {
+    cell = this.grid.cell(cell.pos);
+    cell.baseColor = colormaps[this.settings.prop](this.sim.grid.cell(cell.pos)[this.settings.prop]);
+    cell.fill(cell.baseColor).draw();
   }
 
   render() {

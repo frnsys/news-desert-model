@@ -12,6 +12,16 @@ html, body {
   height: 100vh;
 }
 
+#coverage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 0.25em 0.5em;
+  background: #222;
+  color: #fff;
+  font-size: 0.8em;
+}
+
 #tip {
   z-index: 1;
   position: fixed;

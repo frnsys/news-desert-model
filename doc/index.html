@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>doc</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+
+</head>
+
+<body>
+
+    <main role="main">
+        <div class="note" id="note">
+            <h1 id="model-documentation">Model Documentation</h1>
+<h2 id="purpose">Purpose</h2>
+<p>This model is meant to explore the interactions of news publisher revenue, social media platforms, advertising markets, news coverage, and news deserts.</p>
+<p>Its goals are to:</p>
+<ul>
+<li>Reproduce observed real-world effects, including:<ul>
+<li>Decline in advertising revenue as a result of advertisers shifting from publishers to platforms;</li>
+<li>Systematic biases in news coverage motivated by advertising revenue concerns;</li>
+<li>Collapse and consolidation of local papers due to declines in advertising revenue;</li>
+<li>Expansion of news deserts as a result of local papers collapsing.</li>
+</ul>
+</li>
+<li>To provide a way to explore possible interventions and explore counterfactual ("what-if") scenarios.</li>
+</ul>
+<h2 id="limitations">Limitations</h2>
+<ul>
+<li><em>Complexity limits</em>: All models are simplifications. Our aim is to highlight parts of a system we are especially interested in and develop a tool that allows us to ask questions about that part. The more details we add, the more complicated the model becomes, and it can be harder to clearly understand how it works. Complex models also are computationally harder to run and trickier to develop, debug, and tune.</li>
+<li><em>Specificity limits</em>: This model is meant to explore the above dynamics in a <em>general</em> way. That is, we are not looking at a specific or real-world place and publishers. We are instead developing a theory that we believe will be applicable across many specific cases. There are also practical reasons for these limits: the data we need for specificity might not be available, it might be expensive, or it might require a lot of manual cleaning and processing.</li>
+<li><em>Epistemological limits</em>: All models require assumptions to build, and unfortunately we can never know for certain that the resulting model is "correct". This is a fundamental limitation of modeling in general. The best we can hope for is that if the model recreates observed behaviors then we have reason to believe the interventions in the model will see similar effects in the real world. If this appears to be the case then we have more confidence in the model. But we can never guarantee that a model is 100% reliable.</li>
+</ul>
+<p>All models involve these limitations, but they are nonetheless useful.</p>
+<h2 id="specification">Specification</h2>
+<p><em>Note</em>: Text formatted <code>like this</code> indicate a parameter that can be adjusted. These are basically variables that let users of the model insert their own assumptions. See the "Parameters" section below for more details.</p>
+<p>The model consists of a hexagonal grid world. Each hexagon (<em>cell</em>) has a <em>population</em> and average <em>wealth</em> that are randomly generated.</p>
+<figure><img alt="Cell population and wealth" src="assets/cells.png" /><figcaption>Cell population and wealth</figcaption>
+</figure>
+
+<div class="figure">
+    <div class="stages">
+        <div id="stage-1" class="stage"></div>
+        <div id="stage-2" class="stage"></div>
+    </div>
+    <div class="stages-control">
+        <div class="reset-button button">Reset</div>
+    </div>
+</div>
+
+<h3 id="publishers">Publishers</h3>
+<p><em>Publishers</em> are also generated randomly; a cell's likelihood of having a publisher is determined by its population and wealth. More densely-populated and wealthier cells are more likely to have publishers.</p>
+
+<div class="figure">
+    <div class="stages">
+        <div id="stage-3" class="stage"></div>
+        <div id="stage-4" class="stage"></div>
+    </div>
+    <div class="stages-control">
+        <div class="reset-button button">Reset</div>
+    </div>
+</div>
+
+<figure><img alt="Publisher coverage area" src="assets/coverage.png" /><figcaption>Publisher coverage area</figcaption>
+</figure>
+<p>Publishers also have a <em>coverage area</em> that determines what cells they might report on. This is also determined by the cell population: publishers in more densely-populated cells are more likely to have a wider coverage area. This is meant to emulate how the publishers that cover the most area (for example, national publications) tend to be located in large cities.</p>
+<p>Publishers have a starting amount of <em>funds</em> that is determined by the <code>baseFunds</code> parameter and the population of their cell. Publishers in more densely-populated cells will tend to have more starting funds.</p>
+<p>Publishers also each have an <em>owner</em>. Every publisher starts out owned by a different owner. Owners capture some of the publishers' revenue, determined by the <code>ownerRevenueShare</code> parameter. They can use this money to purchase other publishers.</p>
+<figure><img alt="Owner/publisher motives" src="assets/motives.png" /><figcaption>Owner/publisher motives</figcaption>
+</figure>
+<p>Owners also have different <em>motives</em>. They are all motivated by some randomly-generated mixture of <em>civic-drive</em> and <em>profit-drive</em>. All publishers under a given owner share that owner's motivations. Thus some publishers lean more towards profit and some lean more towards civic duty. These influence how publishers decide on what to report on.</p>
+
+<div class="figure">
+    <div class="stages">
+        <div id="stage-5" class="stage"></div>
+        <div id="stage-6" class="stage"></div>
+        <div id="stage-7" class="stage"></div>
+    </div>
+    <div class="stages-control">
+        Civic-motive <input type="range" min="0" max="1" step="0.1" id="motive"> Profit-motive
+        <div id="cell-value">--</div>
+    </div>
+</div>
+
+<h3 id="events">Events</h3>
+<figure><img alt="Event coverage" src="assets/events.png" /><figcaption>Event coverage</figcaption>
+</figure>
+<p>Every time step in the model, <em>events</em> happen in cells. The number of events that happen depends on the cell's population, such that more densely-populated cells tend to have more events. Publishers decide whether or not to cover these events.</p>
+<p>Reporting on events has a <em>cost</em>, determined by the <code>baseCost</code> parameter and the event cell's population, such that more densely-populated cells are more costly to cover.</p>
+<p>For each event, a publisher asks: "What do I get out of reporting on this event?" The answer is determined by their motives. More <em>profit-motivated</em> publishers emphasize the expected ad profit, which is determined by the wealth of the cell the event occurred in and the reporting costs. Thus they are more likely to cover events in wealthier areas. More <em>civic-motivated</em> publishers, on the other hand, emphasize covering events that affect a lot of people.</p>
+<h3 id="platforms">Platforms</h3>
+<p>Media platforms exponentially gain new users, as determined by the <code>platformGrowth</code> parameter. Platforms also accumulate <em>data</em> from their users, as determined by the <code>dataPerUser</code> parameter. This data makes platforms appealing to advertisers.</p>
+<h3 id="advertising">Advertising</h3>
+<p>Advertising revenue from a cell is determined by the <code>revenuePerAd</code> parameter, the overall health of the economy (via the <code>economy</code> parameter), platforms' data, and the cell's wealth and population.</p>
+<p>A publisher takes a share of a cell's advertising revenue only if they covered that cell's events.</p>
+<p>Advertising revenue is diverted towards platforms as they accumulate data.</p>
+<h3 id="subscriptions">Subscriptions</h3>
+<p>Subscription revenue from a cell is determined by the <code>revenuePerSub</code> parameter, the overall health of the economy (via the <code>economy</code> parameter), and the cell's wealth and population.</p>
+<p>A publisher gets subscription revenue from a cell only if they covered that cell's events.</p>
+<h3 id="bankruptcy-and-consolidation">Bankruptcy and Consolidation</h3>
+<figure><img alt="Publisher status" src="assets/publishers.png" /><figcaption>Publisher status</figcaption>
+</figure>
+<p>Publishers may go bankrupt if their funds drop below zero.</p>
+<p>Profit-motivated owners may also buy publishers with their own funds. The price of a publisher is determined by the funds it has on hand and the <code>valuationMultiplier</code> parameter. Once a publisher is acquired by a new owner, it adopts the motivations of that new owner. Thus it might become more civic or profit-motivated, depending on the new owner.</p>
+<p>Owners can't own more publishers than set by the <code>ownershipLimit</code> parameter.</p>
+<h3 id="parameters">Parameters</h3>
+<p>Parameters are variables that represent some of the assumptions we are making with the model. They provide a way for people to make their own assumptions and a way to explore different "what-if" scenarios.</p>
+<p>In this model, the primary parameters are:</p>
+<ul>
+<li><code>baseFunds</code>: publishers start out with this much money plus more based on their population</li>
+<li><code>baseCost</code>: how much it costs at minimum to report on something.</li>
+<li><code>dataPerUser</code>: how quickly social media platforms accumulate data, which makes them more appealing to advertisers</li>
+<li><code>revenuePerAd</code>: how much revenue publishers make per ad sale</li>
+<li><code>revenuePerSub</code>: how much revenue publishers make per subscriber</li>
+<li><code>platformGrowth</code>: how quickly social media platforms grow in users</li>
+<li><code>ownerRevenueShare</code>: how much publisher revenue goes to the owner</li>
+<li><code>valuationMultiplier</code>: influences the cost of buying a publisher</li>
+<li><code>ownershipLimit</code>: maximum amount of consolidation allowed</li>
+<li><code>economy</code>: general economic health multiplier</li>
+</ul>
+<h2 id="questions">Questions</h2>
+<p>These are some example questions to demonstrate what the model can do.</p>
+<ul>
+<li>What happens to coverage if ownership limits were increased or reduced?</li>
+<li>What happens to coverage if we subsidize small local papers?</li>
+<li>What happens if subscriber revenue is somehow increased? How much does it have to increase by to make up for the loss in advertising revenue?</li>
+<li>What if we redistribute some of the advertising revenue from platforms back to publishers?</li>
+<li>What happens if all publishers are entirely civic-driven? If profit-driven?</li>
+<li>What if some percent of owner revenue is put into a common fund to support smaller papers?</li>
+</ul>
+<h2 id="technical-details">Technical Details</h2>
+<p>Cell populations ¦p_c \in [0.1, 1]¦ and wealth ¦w_c \in [0.1, 1]¦ are initialized using 2D simplex noise to provide a smooth distribution over the hexagonal space.</p>
+<p>A publisher is created in a cell ¦c¦ with probability ¦\frac{p_c^2 + w_c^2}{2}¦. A publisher's radius is defined as ¦r s p_c¦ where ¦r \in [0,1]¦ is a uniform random variable and ¦s¦ is the largest dimension of the hexagonal grid (i.e. number of columns or rows, depending on which is greater). A publisher's funds ¦f_p¦ start as ¦\beta p_c (1 + w_c)¦, where ¦\beta¦ is the <code>baseFunds</code> parameter. A publisher's owner's civic motive weight ¦m_v¦ is initialized as a uniform random variable ¦m_v \in [0,1]¦; the profit motive weight is ¦m_p = 1 - m_v¦.</p>
+<p>Each step, events are generated in a cell ¦c¦ according to a Poisson distribution parameterized by ¦\lambda = p_c¦. Publishers decide what events to report on by ranking events according to a reward function ¦\mathcal R¦. For an event ¦e_c¦ in cell ¦c¦, the reward function is ¦\mathcal R(e_c) = m_v p_c + m_p (p_c w_c - c_e)¦, where ¦c_e¦ is the cost of reporting on event ¦e = \kappa + \sqrt{p_c}¦ and ¦\kappa¦ is the parameter <code>baseCost</code>. Publishers run down this ranking of events, reporting everything until they run out of funds for the step.</p>
+<p>Total advertising revenue ¦r^a_c¦for a cell ¦c¦ is determined by ¦r^a_c = \eta_a w_c p_c \epsilon¦ where ¦\eta_a¦ is the <code>revenuePerAd</code> parameter and ¦\epsilon¦ is the <code>economy</code> parameter. If we say ¦P_{e_c}¦ is the set of publishers that covered event ¦e_c¦ and ¦d¦ is the platforms' accumulated data, the advertising revenue per publisher covering that cell is:</p>
+<p><mathjax>$$
+r^a_{c,p} = \begin{cases}
+\frac{r^a_c}{|P_{e_c}| + d} &amp; \text{if } p \in P_{e_c} \\
+0. &amp; \text{otherwise}
+\end{cases}
+$$</mathjax></p>
+<p>Similarly, subscription revenue for a publisher covering that cell is as follows, where ¦\eta_b¦ is the <code>revenuePerSub</code> parameter:</p>
+<p><mathjax>$$
+r^b_{c,p} = \begin{cases}
+\eta_b \epsilon \frac{p_c w_c}{|P_{e_c}|} &amp; \text{if } p \in P_{e_c} \\
+0. &amp; \text{otherwise}
+\end{cases}
+$$</mathjax></p>
+<p>The publisher takes revenue of ¦(1-\omega)(r^a_{c,p} + r^b_{c,p})¦, where ¦\omega¦ is the <code>ownerRevenueShare</code> parameter.</p>
+<p>Platform users ¦u¦ grows at the rate of ¦u^\gamma¦ per step, up to a maximum of ¦\sum_{c \in C}p_c¦ (i.e. the total population), where ¦\gamma¦ is the <code>platformGrowth</code> parameter and ¦C¦ is the set of all cells. Platform data ¦d¦ increases by ¦u^2 \delta¦ per step, where ¦\delta¦ is the <code>dataPerUser</code> parameter.</p>
+<p>A publisher goes bankrupt if it ends the step with ¦f_p &lt; 0¦.</p>
+<p>Owners where ¦m_p &gt; m_v¦ (i.e. more profit-motivated than civic-motivated) may purchase more publishers, so long as the percent of publishers they own is less than the <code>ownershipLimit</code> parameter. The cost of a publisher ¦p¦ is ¦f_p \upsilon \epsilon¦ where ¦\upsilon¦ is the <code>valuationMultiplier</code> parameter. To buy, the interested owner must have enough funds for this cost.</p>
+<script src="dist/doc.js"></script>
+        </div>
+    </main>
+
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            tex2jax: {
+                inlineMath: [["¦","¦"]],
+                displayMath: [['$$','$$']],
+                processEscapes: true
+            }
+        });
+    </script>
+
+    <script>
+        // Connect to Web Socket
+        var ws = new WebSocket("ws://localhost:9001/");
+        ws.onmessage = function(e) {
+            if (e.data === 'update') {
+                window.location.reload();
+            }
+        };
+    </script>
+
+
+</body>
+</html>
