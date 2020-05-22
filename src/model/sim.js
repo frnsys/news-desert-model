@@ -185,10 +185,7 @@ class Sim {
     this.stats.users = this.platforms.users/this.population;
     this.stats.attention /= this.grid.cells.length;
     this.stats.profit = alive.reduce((acc, pub) => acc + pub.owner.weights.profit, 0)/alive.length
-    this.stats.concen = this.owners.reduce((acc, own) => {
-      own.publishers = own.publishers.filter((pub) => !pub.bankrupt);
-      return own.publishers.length > acc ? own.publishers.length : acc
-    }, 0)/alive.length;
+    this.stats.concen = 1-this.owners.length/alive.length;
     return this.stats;
   }
 }
