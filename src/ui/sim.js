@@ -153,11 +153,12 @@ class SimUI {
       'mouseenter touchstart': function(ev) {
         let cell = ev.currentTarget;
         let c = grid.cell(cell.pos);
-        if (self.mouseenter) self.mouseenter(c);
+
+        let stageEl = this.stage.attrs.container;
+        let x = stageEl.clientLeft + cell.attrs.x + this.cellSize;
+        let y = stageEl.clientLeft + cell.attrs.y + this.cellHeight/2;
+        if (self.mouseenter) self.mouseenter(c, {x, y});
         if (settings.showRadius && c.publisher && !c.publisher.bankrupt) {
-          let stageEl = this.stage.attrs.container;
-          let x = stageEl.clientLeft + cell.attrs.x + this.cellSize;
-          let y = stageEl.clientLeft + cell.attrs.y + this.cellHeight/2;
 
           this.showRadius(cell.pos, c.publisher.radius, (c, pos) => {
             let pop = grid.cell(pos).agents;
