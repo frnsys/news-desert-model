@@ -159,7 +159,6 @@ class SimUI {
         let y = stageEl.clientLeft + cell.attrs.y + this.cellHeight/2;
         if (self.mouseenter) self.mouseenter(c, {x, y});
         if (settings.showRadius && c.publisher && !c.publisher.bankrupt) {
-
           this.showRadius(cell.pos, c.publisher.radius, (c, pos) => {
             let pop = grid.cell(pos).agents;
             let color = colormap4(pop);
@@ -188,6 +187,16 @@ class SimUI {
           });
           highlightedPubs = [];
         }
+      },
+      click: (ev) => {
+        // Click to create new publisher
+        let cell = ev.currentTarget;
+        let c = grid.cell(cell.pos);
+        if (!c.publisher) {
+          let pub = this.sim.createPublisher(c);
+          let circ = this.addPublisher(pub);
+          this.publishers.push(circ);
+        }
       }
     });
 
@@ -202,26 +211,10 @@ class SimUI {
     this.eventGrid.layer.opacity(this.settings.eventsOpacity);
 
     // Setup publishers
-    let layer = new K.Layer();
-    this.publishers = this.sim.publishers.map((pub) => {
-      let cell = this.grid.cell(pub.cell.pos);
-      let circ = new K.Circle({
-        x: cell.attrs.x + cell.attrs.width/2,
-        y: cell.attrs.y + cell.attrs.height/2,
-        radius: cell.attrs.width/4,
-        fill: '#43CC70', //'orange',
-        stroke: 'black',
-        strokeWidth: 0.5,
-        listening: false,
-        perfectDrawEnabled: false
-      });
-      circ.publisher = pub;
-      layer.add(circ);
-      return circ;
-    });
-    layer.hitGraphEnabled(false);
-    this.stage.add(layer);
-    this.publishersLayer = layer;
+    this.publishersLayer = new K.Layer();
+    this.publishers = this.sim.publishers.map((pub) => this.addPublisher(pub));
+    this.publishersLayer.hitGraphEnabled(false);
+    this.stage.add(this.publishersLayer);
     this.publishersLayer.opacity(this.settings.pubsOpacity);
 
     this.setProperty(this.settings.prop);
@@ -229,6 +222,24 @@ class SimUI {
     this.grid.draw();
     this.eventGrid.draw();
     this.publishersLayer.draw();
+  }
+
+  addPublisher(pub) {
+    let cell = this.grid.cell(pub.cell.pos);
+    let circ = new K.Circle({
+      x: cell.attrs.x + cell.attrs.width/2,
+      y: cell.attrs.y + cell.attrs.height/2,
+      radius: cell.attrs.width/4,
+      fill: '#43CC70', //'orange',
+      stroke: 'black',
+      strokeWidth: 0.5,
+      listening: false,
+      perfectDrawEnabled: false
+    });
+    circ.publisher = pub;
+    circ.baseColor = '#43CC70';
+    this.publishersLayer.add(circ);
+    return circ;
   }
 
   setProperty(prop) {

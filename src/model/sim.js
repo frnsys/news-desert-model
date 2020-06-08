@@ -63,25 +63,12 @@ class Sim {
 
     // Initialize publishers
     this.publishers = [];
+    this.owners = [];
     this.grid.cells.forEach((cell) => {
       if (this.rng() < (cell.agents**2 + cell.wealth**2)/2) {
-        let r = cell.agents * this.rng();
-        r = Math.ceil(Math.max(this.grid.nRows, this.grid.nCols) * r);
-        let funds = this.params.baseFunds * cell.agents * (1 + cell.wealth);
-        cell.publisher = new Publisher(cell, r, funds, this.rng);
-        let area = this.grid.radius(cell.pos, r).map((pos) => this.grid.cell(pos));
-        area.forEach((c) => {
-          c.publishers.push(cell.publisher);
-        });
-
-        cell.publisher.cells = area;
-        cell.publisher.value = area.reduce((acc, cell) => acc + cell.agents * cell.wealth, 0);
-
-        this.publishers.push(cell.publisher);
+        this.createPublisher(cell);
       }
     });
-    this.owners = this.publishers.map((pub) => pub.owner);
-    this.stats.publishers = this.publishers.length;
 
     // Initialize platforms
     this.platforms = {
@@ -90,6 +77,25 @@ class Sim {
     };
 
     this.population = this.grid.cells.reduce((acc, cell) => acc + cell.agents, 0);
+  }
+
+  createPublisher(cell) {
+    let r = cell.agents * this.rng();
+    r = Math.ceil(Math.max(this.grid.nRows, this.grid.nCols) * r);
+    let funds = this.params.baseFunds * cell.agents * (1 + cell.wealth);
+    cell.publisher = new Publisher(cell, r, funds, this.rng);
+    let area = this.grid.radius(cell.pos, r).map((pos) => this.grid.cell(pos));
+    area.forEach((c) => {
+      c.publishers.push(cell.publisher);
+    });
+
+    cell.publisher.cells = area;
+    cell.publisher.value = area.reduce((acc, cell) => acc + cell.agents * cell.wealth, 0);
+
+    this.publishers.push(cell.publisher);
+    this.owners.push(cell.publisher.owner);
+    this.stats.publishers = this.publishers.length;
+    return cell.publisher;
   }
 
   step() {
