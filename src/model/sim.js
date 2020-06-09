@@ -185,12 +185,12 @@ class Sim {
 
     // Consolidation
     let profitOwners = this.owners.filter((own) => own.weights.profit > own.weights.civic);
-    profitOwners.sort(() => this.rng() - 0.5);
+    profitOwners.sort((own) => (this.rng()*0.1) + own.weights.profit);
     let alive = this.publishers.filter((pub) => !pub.bankrupt);
     alive.sort((a, b) => b.civic - a.civic);
     let bought = new Set();
     profitOwners.forEach((own) => {
-      if (own.publishers.length/alive >= this.params.ownershipLimit) return;
+      if (own.publishers.length/alive.length >= this.params.ownershipLimit) return;
 
       alive.forEach((pub) => {
         if (pub.owner == own) return;
