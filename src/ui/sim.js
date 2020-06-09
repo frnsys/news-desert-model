@@ -121,7 +121,7 @@ class SimUI {
       let graphs = this.pane.addFolder({
         title: 'Graphs'
       });
-      ['attention', 'users', 'concen', 'profit'].forEach((k) => {
+      ['coverage', 'users', 'concen', 'profit'].forEach((k) => {
         graphs.addMonitor(this.sim.stats, k, {
           view: 'graph',
           min: 0,
@@ -135,6 +135,8 @@ class SimUI {
       });
       graphs.addMonitor(this.sim.stats, 'revenue_a');
       graphs.addMonitor(this.sim.stats, 'revenue_s');
+      graphs.addMonitor(this.sim.stats, 'subsidy');
+      graphs.addMonitor(this.sim.stats, 'platformAdRev');
     }
 
     this.reset();

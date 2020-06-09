@@ -20,8 +20,10 @@ class Sim {
       ownerRevenueShare: 0.1,
       valuationMultiplier: 2,
       ownershipLimit: 0.1,
-      economy: 1
+      economy: 1,
+      platformAdTax: 0
     };
+    this.funds = 0;
 
     this.reset();
   }
@@ -33,11 +35,13 @@ class Sim {
     this.stats = {
       revenue_s: 0,
       revenue_a: 0,
-      attention: 0,
+      coverage: 0,
       users: 0,
       concen: 0,
       publishers: 0,
-      profit: 0
+      profit: 0,
+      platformAdRev: 0,
+      subsidy: 0
     };
 
     this.grid = new HexGrid(...this.size);
@@ -64,6 +68,7 @@ class Sim {
     // Initialize publishers
     this.publishers = [];
     this.owners = [];
+    this.stats.publishers = 0;
     this.grid.cells.forEach((cell) => {
       if (this.rng() < (cell.agents**2 + cell.wealth**2)/2) {
         this.createPublisher(cell);
@@ -94,7 +99,7 @@ class Sim {
 
     this.publishers.push(cell.publisher);
     this.owners.push(cell.publisher.owner);
-    this.stats.publishers = this.publishers.length;
+    this.stats.publishers += 1;
     return cell.publisher;
   }
 
@@ -102,7 +107,8 @@ class Sim {
     this.steps += 1;
     this.stats.revenue_a = 0;
     this.stats.revenue_s = 0;
-    this.stats.attention = 0;
+    this.stats.platformAdRev = 0;
+    this.stats.coverage = 0;
 
     // Generate events
     this.grid.cells.forEach((cell) => {
@@ -120,10 +126,12 @@ class Sim {
     });
 
     // Publishers report on events
+    let activePubs = this.publishers.filter((pub) => !pub.bankrupt).length;
+    this.stats.subsidy = this.params.subsidy * activePubs + this.funds;
     this.publishers.forEach((pub, i) => {
-      pub.funds += this.params.subsidy;
       pub.covered = new Set();
       if (!pub.bankrupt) {
+        pub.funds += this.params.subsidy + this.funds/activePubs;
         let reported = pub.report(pub.eventQueue, this.params);
         reported.forEach((event) => {
           event.reported += 1;
@@ -135,6 +143,8 @@ class Sim {
     });
 
     // Advertisers buy ads
+    this.funds = 0;
+    let platformAdRevenue = 0;
     this.grid.cells.forEach((cell) => {
       let ads = this.params.revenuePerAd * cell.wealth * cell.agents * this.params.economy;
       let covered = cell.publishers.filter((pub) => pub.covered.includes(cell));
@@ -142,6 +152,7 @@ class Sim {
       covered.forEach((pub) => {
         let adRevenue = ads/z;
         this.stats.revenue_a += adRevenue;
+        platformAdRevenue += ads/covered.length - adRevenue;
 
         // Subscribers
         let subscriberRevenue = (cell.agents * cell.wealth)/covered.length * this.params.subRate * this.params.revenuePerSub * this.params.economy;
@@ -152,8 +163,13 @@ class Sim {
         pub.owner.funds += this.params.ownerRevenueShare * revenue;
       });
 
-      this.stats.attention += covered.length/cell.publishers.length;
+
+      let alive = cell.publishers.filter((pub) => !pub.bankrupt).length;
+      this.stats.coverage += alive > 0 ? covered.length/alive.length : 0;
     });
+    let platformAdTaxed = platformAdRevenue * this.params.platformAdTax;
+    this.stats.platformAdRev = platformAdRevenue;
+    this.funds += platformAdTaxed;
 
     // Platform growth
     this.platforms.users = Math.min(this.population, this.platforms.users**this.params.platformGrowth);
@@ -189,7 +205,7 @@ class Sim {
     });
 
     this.stats.users = this.platforms.users/this.population;
-    this.stats.attention /= this.grid.cells.length;
+    this.stats.coverage /= this.grid.cells.length;
     this.stats.profit = alive.reduce((acc, pub) => acc + pub.owner.weights.profit, 0)/alive.length
     this.stats.concen = 1-this.owners.length/alive.length;
     return this.stats;
