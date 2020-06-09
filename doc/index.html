@@ -120,7 +120,27 @@
 <li><code>valuationMultiplier</code>: influences the cost of buying a publisher</li>
 <li><code>ownershipLimit</code>: maximum amount of consolidation allowed</li>
 <li><code>economy</code>: general economic health multiplier</li>
+<li><code>subsidy</code>: subsidy to all publishers</li>
+<li><code>platformAdTax</code>: tax on ad revenue for platforms that is redistributed to publishers</li>
 </ul>
+<h3 id="charts">Charts</h3>
+<p>The charts included in the model are:</p>
+<ul>
+<li><code>coverage</code>: On average, what percent of relevant publishers cover events in a cell. Say an event happens in a cell, and that cell is in 10 publishers' coverage area. If only one of those publishers covered the event, then <code>coverage=1/10</code>.</li>
+<li><code>users</code>: What percent of the population are on platforms</li>
+<li><code>concen</code>: How concentrated publisher ownership is. Values closer to 1 mean more concentrated, with <code>concen=1</code> indicating that one person owns all publishers.</li>
+<li><code>profit</code>: Average profit motive across publishers, <code>profit=1</code> means all publishers are completely motivated by profit.</li>
+<li><code>publishers</code>: Number of (non-bankrupt) publishers</li>
+<li><code>revenue_a</code>: Total amount of ad revenue, across all publishers</li>
+<li><code>revenue_s</code>: Total number of subscription revenue, across all publishers</li>
+<li><code>subsidy</code>: Total subsidy received, across all publishers</li>
+<li><code>platformAdRev</code>: Total platform ad revenue</li>
+</ul>
+<p>Other measurements:</p>
+<ul>
+<li><code>deserts</code>: How many cells have no coverage; i.e. if an event occurs, no relevant publisher covers it. Note: this does not necessarily mean there is no relevant publisher for that cell, just that they neglect to report on it.</li>
+</ul>
+<p>To clarify, a publisher is "relevant" for a given cell if that cell is in that publisher's coverage area.</p>
 <h2 id="questions">Questions</h2>
 <p>These are some example questions to demonstrate what the model can do.</p>
 <ul>

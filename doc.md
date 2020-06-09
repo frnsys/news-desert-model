@@ -127,6 +127,28 @@ In this model, the primary parameters are:
 - `valuationMultiplier`: influences the cost of buying a publisher
 - `ownershipLimit`: maximum amount of consolidation allowed
 - `economy`: general economic health multiplier
+- `subsidy`: subsidy to all publishers
+- `platformAdTax`: tax on ad revenue for platforms that is redistributed to publishers
+
+## Charts
+
+The charts included in the model are:
+
+- `coverage`: On average, what percent of relevant publishers cover events in a cell. Say an event happens in a cell, and that cell is in 10 publishers' coverage area. If only one of those publishers covered the event, then `coverage=1/10`.
+- `users`: What percent of the population are on platforms
+- `concen`: How concentrated publisher ownership is. Values closer to 1 mean more concentrated, with `concen=1` indicating that one person owns all publishers.
+- `profit`: Average profit motive across publishers, `profit=1` means all publishers are completely motivated by profit.
+- `publishers`: Number of (non-bankrupt) publishers
+- `revenue_a`: Total amount of ad revenue, across all publishers
+- `revenue_s`: Total number of subscription revenue, across all publishers
+- `subsidy`: Total subsidy received, across all publishers
+- `platformAdRev`: Total platform ad revenue
+
+Other measurements:
+
+- `deserts`: How many cells have no coverage; i.e. if an event occurs, no relevant publisher covers it. Note: this does not necessarily mean there is no relevant publisher for that cell, just that they neglect to report on it.
+
+To clarify, a publisher is "relevant" for a given cell if that cell is in that publisher's coverage area.
 
 ## Questions
 
